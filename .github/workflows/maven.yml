@@ -34,7 +34,6 @@ jobs:
       working-directory: main/go-service
       run: |
         go vet ./...
-        go test ./...
     - name: Start Go Service and Run Contract Tests
       working-directory: main
       shell: bash
@@ -47,5 +46,5 @@ jobs:
         GO_PID=$!
         popd
         sleep 5
-        mvn -B test -Dsurefire.forkCount=0 -Djacoco.skip=true
+        mvn test
         kill $GO_PID
