@@ -46,5 +46,5 @@ jobs:
         GO_PID=$!
         popd
         sleep 5
-        mvn test
+        mvn -B test -Dsurefire.forkCount=0 -Djacoco.skip=true
         kill $GO_PID
