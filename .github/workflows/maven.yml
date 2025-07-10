@@ -4,7 +4,7 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, feature/testcontainers ]
   pull_request:
     branches: [ main ]
 
