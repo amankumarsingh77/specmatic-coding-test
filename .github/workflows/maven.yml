@@ -1,5 +1,4 @@
-# This workflow will build a Java project with Maven
-# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+# This workflow will build a Java project with Maven and run Specmatic contract tests
 
 name: CI Pipeline
 
@@ -8,6 +7,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+
 jobs:
   build:
     strategy:
@@ -15,26 +15,33 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         java: [17]
         go: [1.22]
+
     runs-on: ${{ matrix.os }}
+
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout Repository
+      uses: actions/checkout@v4
       with:
         path: main
+
     - name: Set up JDK ${{ matrix.java }}
       uses: actions/setup-java@v4
       with:
         distribution: 'oracle'
         java-version: ${{ matrix.java }}
+
     - name: Set up Go ${{ matrix.go }}
       uses: actions/setup-go@v5
       with:
         go-version: ${{ matrix.go }}
         check-latest: true
-    - name: Build and Test Go Service
+
+    - name: Build and Vet Go Service
       working-directory: main/go-service
       run: |
         go vet ./...
-    - name: Start Go Service and Run Contract Tests
+
+    - name: Start Go Service
       working-directory: main
       shell: bash
       env:
@@ -45,6 +52,35 @@ jobs:
         go run . &
         GO_PID=$!
         popd
+        echo "Go service started with PID $GO_PID"
+        echo $GO_PID > go_service.pid
         sleep 5
-        mvn test
-        kill $GO_PID
+
+    - name: Download Specmatic JAR
+      working-directory: main
+      run: |
+        curl -L -o specmatic.jar https://github.com/znsio/specmatic/releases/latest/download/specmatic.jar
+
+    - name: Run Specmatic Contract Tests
+      working-directory: main
+      shell: bash
+      env:
+        SPECMATIC_OAUTH2_TOKEN: ""
+        CUSTOM_RESPONSE: "false"
+        SPECMATIC_GENERATIVE_TESTS: "true"
+        ONLY_POSITIVE: "false"
+      run: |
+        java "-DendpointsAPI=http://localhost:8090/actuator/mappings" \
+             -jar specmatic.jar \
+             test "./products_api.yaml" \
+             --testBaseURL "http://localhost:8090"
+
+    - name: Stop Go Service
+      working-directory: main
+      shell: bash
+      run: |
+        if [ -f go_service.pid ]; then
+          PID=$(cat go_service.pid)
+          echo "Killing Go service with PID $PID"
+          kill $PID || true
+        fi
