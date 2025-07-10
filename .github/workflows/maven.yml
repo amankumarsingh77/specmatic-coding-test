@@ -4,7 +4,7 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ main, feat/testcontainers ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -12,7 +12,10 @@ jobs:
   test:
     strategy:
       matrix:
-        os: [ubuntu-latest] # docker is not supported on the MacOS arm64 images. Source: https://github.com/marketplace/actions/setup-docker-on-macos
+      # Running tests only on Linux as the application is Dockerized and runs in a Linux container.
+      # Windows runners cause issues with Docker networking (e.g., missing bridge plugin) and are unnecessary for containerized apps.
+      # Docker is not supported on the MacOS arm64 images. Source: https://github.com/marketplace/actions/setup-docker-on-macos
+        os: [ubuntu-latest]
         go: [1.23]
 
     runs-on: ${{ matrix.os }}
