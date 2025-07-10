@@ -1,4 +1,4 @@
-# This workflow will build a Java project with Maven and run Specmatic contract tests
+# This workflow will build and test the Go service with Specmatic contract tests using testcontainers
 
 name: CI Pipeline
 
@@ -9,26 +9,17 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  test:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        java: [17]
-        go: [1.22]
+        go: [1.23]
 
     runs-on: ${{ matrix.os }}
 
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
-      with:
-        path: main
-
-    - name: Set up JDK ${{ matrix.java }}
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'oracle'
-        java-version: ${{ matrix.java }}
 
     - name: Set up Go ${{ matrix.go }}
       uses: actions/setup-go@v5
@@ -36,51 +27,27 @@ jobs:
         go-version: ${{ matrix.go }}
         check-latest: true
 
-    - name: Build and Vet Go Service
-      working-directory: main/go-service
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Go Service Docker Image
       run: |
+        docker build -t specmatic-go-service:latest .
+
+    - name: Verify Go Service Build
+      working-directory: go-service
+      run: |
+        go mod download
         go vet ./...
+        go build -o service
 
-    - name: Start Go Service
-      working-directory: main
-      shell: bash
-      env:
-        PORT: ":8090"
-        SERVER_PORT: "0"
-      run: |
-        pushd go-service
-        go run . &
-        GO_PID=$!
-        popd
-        echo "Go service started with PID $GO_PID"
-        echo $GO_PID > go_service.pid
-        sleep 5
-
-    - name: Download Specmatic JAR
-      working-directory: main
-      run: |
-        curl -L -o specmatic.jar https://github.com/znsio/specmatic/releases/latest/download/specmatic.jar
-
-    - name: Run Specmatic Contract Tests
-      working-directory: main
-      shell: bash
+    - name: Run Contract Tests with Testcontainers
+      working-directory: go-service
       env:
         SPECMATIC_OAUTH2_TOKEN: ""
         CUSTOM_RESPONSE: "false"
         SPECMATIC_GENERATIVE_TESTS: "true"
         ONLY_POSITIVE: "false"
       run: |
-        java "-DendpointsAPI=http://localhost:8090/actuator/mappings" \
-             -jar specmatic.jar \
-             test "./products_api.yaml" \
-             --testBaseURL "http://localhost:8090"
+        go test -v -timeout 10m
 
-    - name: Stop Go Service
-      working-directory: main
-      shell: bash
-      run: |
-        if [ -f go_service.pid ]; then
-          PID=$(cat go_service.pid)
-          echo "Killing Go service with PID $PID"
-          kill $PID || true
-        fi

@@ -50,6 +50,40 @@ func (s *Server) Start() error {
 
 	s.echo.GET("/products", echo.WrapHandler(products.HandleGetProducts(store, s.logger)))
 	s.echo.POST("/products", echo.WrapHandler(products.HandlePostProduct(store, s.logger)))
+	s.echo.GET("/actuator/mappings", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, map[string]interface{}{
+			"contexts": map[string]interface{}{
+				"application": map[string]interface{}{
+					"mappings": map[string]interface{}{
+						"dispatcherServlets": map[string]interface{}{
+							"dispatcherServlet": []map[string]interface{}{
+								{
+									"handler":   "HandleGetProducts",
+									"predicate": "{GET [/products]}",
+									"details": map[string]interface{}{
+										"handlerMethod": map[string]interface{}{
+											"className": "products.HandleGetProducts",
+											"name":      "HandleGetProducts",
+										},
+									},
+								},
+								{
+									"handler":   "HandlePostProduct",
+									"predicate": "{POST [/products]}",
+									"details": map[string]interface{}{
+										"handlerMethod": map[string]interface{}{
+											"className": "products.HandlePostProduct",
+											"name":      "HandlePostProduct",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		})
+	})
 
 	s.logger.Infof("Starting server on port %s", s.config.Port)
 	go func() {
