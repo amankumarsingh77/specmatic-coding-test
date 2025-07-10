@@ -3,6 +3,7 @@ package products
 import (
 	"amankumarsingh77/specmatic-coding-test/internal/logger"
 	"encoding/json"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -26,17 +27,35 @@ func WriteError(w http.ResponseWriter, r *http.Request, status int, msg string, 
 
 func HandlePostProduct(store Store, lg logger.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var payload ProductDetails
-		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		bodyBytes, err := io.ReadAll(r.Body)
+		if err != nil {
+			WriteError(w, r, http.StatusBadRequest, "failed to read request body", lg)
+			return
+		}
+
+		var raw map[string]*json.RawMessage
+		if err := json.Unmarshal(bodyBytes, &raw); err != nil {
 			WriteError(w, r, http.StatusBadRequest, "invalid JSON payload", lg)
+			return
+		}
+
+		// here just to make sure the api is backward compatible this check is required. Valid inputs: {cost:200}, Invalid input: {cost:null}
+		if rawCost, ok := raw["cost"]; ok && (rawCost == nil || string(*rawCost) == "null") {
+			WriteError(w, r, http.StatusBadRequest, "cost cannot be null", lg)
+			return
+		}
+
+		var payload ProductDetails
+		if err := json.Unmarshal(bodyBytes, &payload); err != nil {
+			WriteError(w, r, http.StatusBadRequest, "invalid JSON body format", lg)
 			return
 		}
 		if err := validateProductDetails(&payload); err != nil {
 			WriteError(w, r, http.StatusBadRequest, err.Error(), lg)
 			return
 		}
-		created := store.Add(payload)
 
+		created := store.Add(payload)
 		if lg != nil {
 			lg.Infof("Added product id=%d type=%s name=%s", created.ID, created.Type, created.Name)
 		}

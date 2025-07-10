@@ -10,7 +10,7 @@ type ProductDetails struct {
 	Name      string   `json:"name"`
 	Type      string   `json:"type"`
 	Inventory int      `json:"inventory"`
-	Cost      *float64 `json:"cost"`
+	Cost      *float64 `json:"cost,omitempty"`
 }
 
 type Product struct {

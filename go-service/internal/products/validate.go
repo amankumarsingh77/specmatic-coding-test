@@ -24,11 +24,10 @@ func validateProductDetails(p *ProductDetails) error {
 	if p.Inventory < 1 || p.Inventory > 9999 {
 		return errors.New("inventory must be between 1 and 9999")
 	}
-	if p.Cost == nil {
-		return errors.New("cost is required and cannot be null")
+
+	if p.Cost != nil && *p.Cost < 0 {
+		return errors.New("cost must be greater than or equal to 0")
 	}
-	if *p.Cost < 0 {
-		return errors.New("cost must be greater than 0")
-	}
+
 	return nil
 }

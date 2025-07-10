@@ -92,7 +92,6 @@ components:
         - name
         - type
         - inventory
-        - cost
     ProductType:
       type: string
       title: Product Type
