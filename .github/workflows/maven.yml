@@ -32,7 +32,7 @@ jobs:
 
     - name: Build Go Service Docker Image
       run: |
-        docker build -t specmatic-go-service:latest .
+        docker build --platform linux/amd64 -t specmatic-go-service:latest .
 
     - name: Verify Go Service Build
       working-directory: go-service
