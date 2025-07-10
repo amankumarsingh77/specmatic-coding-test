@@ -63,6 +63,7 @@ jobs:
 
     - name: Run Specmatic Contract Tests
       working-directory: main
+      shell: bash
       env:
         SPECMATIC_OAUTH2_TOKEN: ""
         CUSTOM_RESPONSE: "false"
