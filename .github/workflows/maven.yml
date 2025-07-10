@@ -12,7 +12,7 @@ jobs:
   test:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-13]
+        os: [ubuntu-latest, windows-latest] # docker is not supported on the MacOS arm64 images. Source: https://github.com/marketplace/actions/setup-docker-on-macos
         go: [1.23]
 
     runs-on: ${{ matrix.os }}
@@ -27,8 +27,24 @@ jobs:
         go-version: ${{ matrix.go }}
         check-latest: true
 
-    - name: Set up Docker
+    - name: Set up Docker (Linux/Windows)
+      if: runner.os != 'macOS'
       uses: docker/setup-buildx-action@v3
+
+    - name: Set up Docker (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        # Install Docker Desktop for macOS
+        brew install --cask docker
+        # Start Docker Desktop
+        sudo /Applications/Docker.app/Contents/MacOS/Docker --unattended &
+        # Wait for Docker to be ready
+        echo "Waiting for Docker to start..."
+        while ! docker info >/dev/null 2>&1; do
+          echo "Docker not ready yet, waiting..."
+          sleep 5
+        done
+        echo "Docker is ready!"
 
     - name: Build Go Service Docker Image
       run: |
