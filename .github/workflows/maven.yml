@@ -12,7 +12,7 @@ jobs:
   test:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest] # docker is not supported on the MacOS arm64 images. Source: https://github.com/marketplace/actions/setup-docker-on-macos
+        os: [ubuntu-latest] # docker is not supported on the MacOS arm64 images. Source: https://github.com/marketplace/actions/setup-docker-on-macos
         go: [1.23]
 
     runs-on: ${{ matrix.os }}
@@ -27,12 +27,10 @@ jobs:
         go-version: ${{ matrix.go }}
         check-latest: true
 
-    - name: Set up Docker (Linux only)
-      if: runner.os == 'Linux'
+    - name: Set up Docker
       uses: docker/setup-buildx-action@v3
 
-    - name: Build Go Service Docker Image (Linux only)
-      if: runner.os == 'Linux'
+    - name: Build Go Service Docker Image
       run: |
         docker build --platform linux/amd64 -t specmatic-go-service:latest .
 
