@@ -1,11 +1,10 @@
 # This workflow will build a Java project with Maven and run Specmatic contract tests
-# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
 
 name: CI Pipeline
 
 on:
   push:
-    branches: [ main, fix/workflow ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -64,11 +63,16 @@ jobs:
 
     - name: Run Specmatic Contract Tests
       working-directory: main
+      env:
+        SPECMATIC_OAUTH2_TOKEN: ""
+        CUSTOM_RESPONSE: "false"
+        SPECMATIC_GENERATIVE_TESTS: "true"
+        ONLY_POSITIVE: "false"
       run: |
         java "-DendpointsAPI=http://localhost:8090/actuator/mappings" \
              -jar specmatic.jar \
              test "./products_api.yaml" \
-             --testBaseURL "http://localhost:3000"
+             --testBaseURL "http://localhost:8090"
 
     - name: Stop Go Service
       working-directory: main
