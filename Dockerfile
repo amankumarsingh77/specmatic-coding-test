@@ -8,7 +8,7 @@ COPY go-service/. .
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o service
 
-FROM gcr.io/distroless/static
+FROM scratch
 WORKDIR /
 COPY --from=builder /app/go-service/service /service
 COPY --from=builder /app/go-service/config.yaml /config.yaml
