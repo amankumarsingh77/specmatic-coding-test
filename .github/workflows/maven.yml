@@ -27,10 +27,12 @@ jobs:
         go-version: ${{ matrix.go }}
         check-latest: true
 
-    - name: Set up Docker
+    - name: Set up Docker (Linux only)
+      if: runner.os == 'Linux'
       uses: docker/setup-buildx-action@v3
 
-    - name: Build Go Service Docker Image
+    - name: Build Go Service Docker Image (Linux only)
+      if: runner.os == 'Linux'
       run: |
         docker build --platform linux/amd64 -t specmatic-go-service:latest .
 
@@ -50,4 +52,3 @@ jobs:
         ONLY_POSITIVE: "false"
       run: |
         go test -v -timeout 10m
-
