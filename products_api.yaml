@@ -123,6 +123,7 @@ components:
         status:
           type: integer
         error:
+        
           type: string
         path:
           type: string
