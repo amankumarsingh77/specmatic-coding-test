@@ -12,7 +12,10 @@ jobs:
   test:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+      # Running tests only on Linux as the application is Dockerized and runs in a Linux container.
+      # Windows runners cause issues with Docker networking (e.g., missing bridge plugin) and are unnecessary for containerized apps.
+      # Docker is not supported on the MacOS arm64 images. Source: https://github.com/marketplace/actions/setup-docker-on-macos
+        os: [ubuntu-latest]
         go: [1.23]
 
     runs-on: ${{ matrix.os }}
@@ -32,7 +35,7 @@ jobs:
 
     - name: Build Go Service Docker Image
       run: |
-        docker build -t specmatic-go-service:latest .
+        docker build --platform linux/amd64 -t specmatic-go-service:latest .
 
     - name: Verify Go Service Build
       working-directory: go-service
@@ -41,7 +44,7 @@ jobs:
         go vet ./...
         go build -o service
 
-    - name: Run Contract Tests with Testcontainers
+    - name: Run Contract Tests
       working-directory: go-service
       env:
         SPECMATIC_OAUTH2_TOKEN: ""
@@ -50,4 +53,3 @@ jobs:
         ONLY_POSITIVE: "false"
       run: |
         go test -v -timeout 10m
-
