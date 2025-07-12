@@ -53,3 +53,11 @@ jobs:
         ONLY_POSITIVE: "false"
       run: |
         go test -v -timeout 10m
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: specmatic-test-results-${{ matrix.os }}-${{ matrix.go }}
+        path: |
+          build/
+        retention-days: 30
