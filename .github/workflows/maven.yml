@@ -4,7 +4,7 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, feat/testcontainers ]
   pull_request:
     branches: [ main ]
 
@@ -44,6 +44,15 @@ jobs:
         go vet ./...
         go build -o service
 
+    - name: Run Contract Tests
+      working-directory: go-service
+      env:
+        SPECMATIC_OAUTH2_TOKEN: ""
+        CUSTOM_RESPONSE: "false"
+        SPECMATIC_GENERATIVE_TESTS: "true"
+        ONLY_POSITIVE: "false"
+      run: |
+        go test -v -timeout 10m
     - name: Run Contract Tests
       working-directory: go-service
       env:
