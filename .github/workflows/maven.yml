@@ -53,12 +53,11 @@ jobs:
         ONLY_POSITIVE: "false"
       run: |
         go test -v -timeout 10m
-    - name: Run Contract Tests
-      working-directory: go-service
-      env:
-        SPECMATIC_OAUTH2_TOKEN: ""
-        CUSTOM_RESPONSE: "false"
-        SPECMATIC_GENERATIVE_TESTS: "true"
-        ONLY_POSITIVE: "false"
-      run: |
-        go test -v -timeout 10m
+    - name: Upload Specmatic Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: specmatic-test-results-${{ matrix.os }}-${{ matrix.go }}
+        path: |
+          build/
+        retention-days: 30
