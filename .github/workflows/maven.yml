@@ -5,7 +5,7 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, test/compatibility ]
   pull_request:
     branches: [ main ]
 jobs:
@@ -49,3 +49,12 @@ jobs:
         sleep 5
         mvn -B test -Dsurefire.forkCount=0 -Djacoco.skip=true
         kill $GO_PID
+
+    - name: Upload Specmatic Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: specmatic-test-results-${{ matrix.os }}-${{ matrix.go }}
+        path: |
+          build/
+        retention-days: 30
